@@ -1,4 +1,4 @@
-__version__ = '0.3.3'
+__version__ = '0.3.3.1'
 
 from .ann_solo import ann_solo
 

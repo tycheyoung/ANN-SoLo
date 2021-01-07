@@ -14,6 +14,8 @@ from posix.unistd cimport off_t
 from spectrum_utils.spectrum import MsmsSpectrum
 from spectrum_utils.spectrum import PeptideFragmentAnnotation
 
+from libc.stdio cimport FILE, fopen, fseek, ftell, SEEK_END, SEEK_SET, fread, fclose
+
 
 cdef extern from 'sys/mman.h' nogil:
     void *mmap(void *addr, size_t length, int prot, int flags, int fildes,
@@ -43,18 +45,28 @@ cdef class SplibParser:
     cdef size_t _pos
 
     def __cinit__(self, char *filename):
-        fd = open(filename, O_RDONLY)
-        # Get total file size.
-        cdef stat statbuf
-        fstat(fd, &statbuf)
-        self._size = statbuf.st_size
-        # Memory map the spectral library file.
-        self._mmap = <char*>mmap(NULL, self._size, PROT_READ, MAP_SHARED, fd,
-                                 0)
+        # fd = open(filename, O_RDONLY)
+        # # Get total file size.
+        # cdef stat statbuf
+        # fstat(fd, &statbuf)
+        # self._size = statbuf.st_size
+        # # Memory map the spectral library file.
+        # self._mmap = <char*>mmap(NULL, self._size, PROT_READ, MAP_SHARED, fd,
+        #                          0)
+        # self._pos = 0
+        cdef FILE *fp
+        fp = fopen(filename, "r")
+        fseek(fp, 0, SEEK_END)
+        self._size = ftell(fp)
+        self._mmap = <char *> malloc(self._size)
+        fseek(fp, 0, SEEK_SET)
+        fread(self._mmap, sizeof(char), self._size, fp)
+        fclose(fp)
         self._pos = 0
 
     def __dealloc__(self):
-        munmap(self._mmap, self._size)
+        free(self._mmap)
+        # munmap(self._mmap, self._size)
 
     cdef uint32_t _read_int(self) nogil:
         self._pos += 4

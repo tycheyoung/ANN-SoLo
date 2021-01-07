@@ -157,8 +157,13 @@ class SpectralLibraryReader:
 
     def open(self) -> None:
         self._parser = SplibParser(self._filename.encode())
+        # self.f = open(self._filename.encode(), "rb")
+        # self.f.readlines()
 
     def close(self) -> None:
+        # if self.f is not None:
+        #     self.f.close()
+        #     del self.f
         if self._parser is not None:
             del self._parser
 
@@ -192,6 +197,9 @@ class SpectralLibraryReader:
         """
         spectrum = self._parser.read_spectrum(
             self.spec_info['offset'][spec_id])[0]
+        
+        # spectrum = self._parser.read_spectrum_v2(
+        #     self.spec_info['offset'][spec_id])[0]
         spectrum.is_processed = False
         if process_peaks:
             process_spectrum(spectrum, True)
